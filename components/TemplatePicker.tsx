@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { EntryType } from '../types';
+import { EntryType, StoryEntry } from '../types';
 import { entryTemplateFactory, EntryTemplate } from '../services/templateValidator';
 
 interface TemplatePickerProps {
-    onSelectTemplate: (template: Partial<any>) => void;
+    onSelectTemplate: (template: Partial<StoryEntry>) => void;
     onCancel: () => void;
 }
 
@@ -91,7 +91,7 @@ const TemplatePicker: React.FC<TemplatePickerProps> = ({ onSelectTemplate, onCan
                         <div className="text-sm text-gray-300">
                             <div className="mb-1">
                                 <span className="font-medium">Suggested tags:</span>{' '}
-                                {entryTemplateFactory.getTemplate(selectedType)?.suggestedTags.join(', ')}
+                                {entryTemplateFactory.getTemplate(selectedType)?.suggestedTags?.join(', ') || 'N/A'}
                             </div>
                         </div>
                     </div>

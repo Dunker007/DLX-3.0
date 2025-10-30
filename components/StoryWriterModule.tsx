@@ -38,7 +38,9 @@ const StoryWriterModule: React.FC = () => {
     };
 
     const handleSelectTemplate = (template: Partial<StoryEntry>) => {
-        setActiveEntry(template as StoryEntry);
+        // Only set as active entry if it has the minimum required structure
+        // The editor will handle missing fields appropriately
+        setActiveEntry(template as any);
         setIsEditing(true);
         setShowTemplatePicker(false);
     };
