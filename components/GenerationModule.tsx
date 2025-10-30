@@ -6,7 +6,6 @@ import { AspectRatio, VideoAspectRatio } from '../types';
 
 // Extend window interface for aistudio
 declare global {
-  // Fix: Define AIStudio interface in the global scope to resolve type conflict
   interface AIStudio {
     hasSelectedApiKey: () => Promise<boolean>;
     openSelectKey: () => Promise<void>;

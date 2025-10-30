@@ -55,10 +55,10 @@ const defaultProject: Project = {
 
 type RightPanelTab = 'vibe' | 'preview';
 
-const ReviewModal: React.FC<{ content: string; onClose: () => void }> = ({ content, onClose }) => (
+const ReviewModal: React.FC<{ content: string; onClose: () => void; title: string }> = ({ content, onClose, title }) => (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <h2 className="text-xl font-bold text-white mb-4">Code Review Feedback</h2>
+        <h2 className="text-xl font-bold text-white mb-4">{title}</h2>
         <div className="prose prose-invert prose-sm bg-gray-900 rounded-md p-4 overflow-y-auto flex-1 whitespace-pre-wrap">
             {content}
         </div>
@@ -83,8 +83,8 @@ const ProjectForgeModule: React.FC = () => {
     const [vibePrompt, setVibePrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedCode, setGeneratedCode] = useState('');
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [reviewContent, setReviewContent] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState<string | false>(false);
+    const [modalContent, setModalContent] = useState<{title: string, content: string} | null>(null);
 
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
     
@@ -143,24 +143,30 @@ const ProjectForgeModule: React.FC = () => {
         handleFileContentChange(activeFile.content + '\n' + generatedCode);
     };
 
-    const handleCodeAction = async (mode: 'refactor' | 'review') => {
+    const handleCodeAction = async (mode: 'refactor' | 'review' | 'tests') => {
         if (!editorRef.current || !activeFile) return;
         const selection = editorRef.current.getSelection();
-        if (!selection || selection.isEmpty()) {
-            alert("Please select some code to " + mode);
+        const codeToProcess = (selection && !selection.isEmpty()) 
+            ? editorRef.current.getModel()?.getValueInRange(selection)
+            : editorRef.current.getModel()?.getValue();
+
+        if (!codeToProcess) {
+            alert("No code selected or available to process.");
             return;
         }
-        
-        const selectedCode = editorRef.current.getModel()?.getValueInRange(selection);
-        if (!selectedCode) return;
 
-        setIsProcessing(true);
+        setIsProcessing(mode);
         try {
-            const result = await geminiService.refactorOrReviewCode(selectedCode, activeFile.language, mode);
             if (mode === 'refactor') {
-                editorRef.current.executeEdits('ai-refactor', [{ range: selection, text: result }]);
-            } else {
-                setReviewContent(result);
+                const result = await geminiService.refactorOrReviewCode(codeToProcess, activeFile.language, 'refactor');
+                const rangeToUpdate = (selection && !selection.isEmpty()) ? selection : editorRef.current.getModel()?.getFullModelRange();
+                if(rangeToUpdate) editorRef.current.executeEdits('ai-refactor', [{ range: rangeToUpdate, text: result }]);
+            } else if (mode === 'review') {
+                const result = await geminiService.refactorOrReviewCode(codeToProcess, activeFile.language, 'review');
+                setModalContent({title: "Code Review Feedback", content: result});
+            } else if (mode === 'tests') {
+                const result = await geminiService.generateTestsForCode(codeToProcess, activeFile.language);
+                setModalContent({title: "Generated Tests", content: result});
             }
         } catch (error) {
             console.error(`Failed to ${mode} code:`, error);
@@ -179,7 +185,7 @@ const ProjectForgeModule: React.FC = () => {
 
     return (
         <div className="flex flex-col h-[85vh]">
-             {reviewContent && <ReviewModal content={reviewContent} onClose={() => setReviewContent(null)} />}
+             {modalContent && <ReviewModal title={modalContent.title} content={modalContent.content} onClose={() => setModalContent(null)} />}
             <header className="mb-4 flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-white">{project.name}</h1>
@@ -230,13 +236,19 @@ const ProjectForgeModule: React.FC = () => {
                         />
                     )}
                    </div>
-                   <div className="bg-gray-900 p-2 flex items-center justify-end space-x-2">
-                        <button onClick={() => handleCodeAction('refactor')} disabled={isProcessing} className="px-3 py-1.5 bg-gray-700 text-xs text-white rounded hover:bg-gray-600 disabled:opacity-50 flex items-center">
-                            {isProcessing ? <Spinner className="w-4 h-4 mr-2"/> : <WandIcon className="w-4 h-4 mr-2" />} Refactor
-                        </button>
-                        <button onClick={() => handleCodeAction('review')} disabled={isProcessing} className="px-3 py-1.5 bg-gray-700 text-xs text-white rounded hover:bg-gray-600 disabled:opacity-50 flex items-center">
-                            {isProcessing ? <Spinner className="w-4 h-4 mr-2"/> : <SearchIcon className="w-4 h-4 mr-2" />} Review
-                        </button>
+                   <div className="bg-gray-900 p-2 flex items-center justify-between">
+                        <span className="text-xs text-gray-400 px-2 font-semibold">AI Assistants</span>
+                        <div className="space-x-2">
+                            <button onClick={() => handleCodeAction('refactor')} disabled={!!isProcessing} className="px-3 py-1.5 bg-gray-700 text-xs text-white rounded hover:bg-gray-600 disabled:opacity-50 flex items-center">
+                                {isProcessing === 'refactor' ? <Spinner className="w-4 h-4 mr-2"/> : <WandIcon className="w-4 h-4 mr-2" />} Refactor
+                            </button>
+                            <button onClick={() => handleCodeAction('review')} disabled={!!isProcessing} className="px-3 py-1.5 bg-gray-700 text-xs text-white rounded hover:bg-gray-600 disabled:opacity-50 flex items-center">
+                                {isProcessing === 'review' ? <Spinner className="w-4 h-4 mr-2"/> : <SearchIcon className="w-4 h-4 mr-2" />} Review
+                            </button>
+                            <button onClick={() => handleCodeAction('tests')} disabled={!!isProcessing} className="px-3 py-1.5 bg-gray-700 text-xs text-white rounded hover:bg-gray-600 disabled:opacity-50 flex items-center">
+                                {isProcessing === 'tests' ? <Spinner className="w-4 h-4 mr-2"/> : <CodeIcon className="w-4 h-4 mr-2" />} Generate Tests
+                            </button>
+                        </div>
                    </div>
                 </div>
 

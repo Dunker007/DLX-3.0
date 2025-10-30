@@ -40,6 +40,14 @@ export interface Project {
     notes: string;
 }
 
+// --- Feature Flag Types ---
+export type FeatureFlagState = 'active' | 'preview' | 'labs' | 'comingSoon' | 'inactive' | 'disabled';
+
+export type FeatureFlags = {
+  [key: string]: FeatureFlagState;
+};
+
+
 // --- Story Writer Types ---
 
 export interface ReferenceBlock {
@@ -71,6 +79,12 @@ export interface EnvironmentFingerprint {
   dlxVersion?: string;
 }
 
+export interface StoryWriterEntryEmbeddings {
+    executiveSummary?: number[];
+    decisionsRationale?: number[];
+    risksMitigations?: number[];
+}
+
 export interface StoryWriterEntry {
   id: string; // ULID or UUID
   createdUtc: string;
@@ -89,9 +103,12 @@ export interface StoryWriterEntry {
   supersedesEntryId?: string; // if this replaces prior entry entirely
   environmentFingerprint?: EnvironmentFingerprint; // optional Phase 1
   narrativeExtended?: string; // optional long-form
+  isDraft?: boolean;
+  embeddings?: StoryWriterEntryEmbeddings;
+  hash?: string; // SHA-256 hash of the content for integrity
 }
 
 export const TAG_SUGGESTIONS = [
     'deploy', 'rollback', 'incident', 'decision', 'optimization', 
-    'backfill', 'experiment', 'doc-update', 'security'
+    'backfill', 'experiment', 'doc-update', 'security', 'architecture', 'feature'
 ];

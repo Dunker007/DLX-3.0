@@ -44,7 +44,6 @@ const VisionModule: React.FC = () => {
         analysisResult = await geminiService.analyzeVideo(file, currentPrompt);
       }
       setResult(analysisResult);
-    // Fix: Corrected catch block syntax
     } catch (err: any) {
       setError(err.message || `Failed to analyze ${activeTab}.`);
     } finally {

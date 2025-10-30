@@ -1,11 +1,11 @@
 import { GoogleGenAI, Modality, FunctionDeclaration, Type, ToolResponse } from '@google/genai';
 import { ChatMode, AspectRatio, VideoAspectRatio, Project, ProjectFile } from '../types';
 import { fileToBase64, encode, decode, decodeAudioData } from '../util/helpers';
+import { telemetryService } from './telemetryService';
 
 // This interface is a simplified representation of the session object from the Gemini API
 // for internal tracking within our service.
 export interface LiveSession {
-  // Fix: Corrected type from Float3DArray to Float32Array
   sendAudio: (audio: Float32Array) => void;
   sendToolResponse: (response: ToolResponse) => void;
   close: () => void;
@@ -203,6 +203,7 @@ class GeminiService {
   }
 
   public async generateCode(prompt: string, project: Project): Promise<string> {
+    const t0 = performance.now();
     const ai = getAiClient();
     const systemInstruction = `You are an expert web developer. Based on the following project context and files, generate the code requested by the user.
 Only return the raw code for the user's request, without any explanation, comments, or markdown formatting.
@@ -233,11 +234,16 @@ ${file.content}
             temperature: 0.1,
         }
     });
+    
+    const latencyMs = performance.now() - t0;
+    telemetryService.logEvent({ type: 'assistant_call', action: 'generate_code', model: 'gemini-2.5-pro', tokensIn: 0, tokensOut: 0, latencyMs, cacheHit: false });
+
 
     return response.text.trim();
   }
   
   public async refactorOrReviewCode(code: string, language: string, mode: 'refactor' | 'review'): Promise<string> {
+    const t0 = performance.now();
     const ai = getAiClient();
     
     const prompts = {
@@ -253,6 +259,31 @@ Identify potential bugs, style issues, and areas for improvement. Format your fe
         model: 'gemini-2.5-pro',
         contents: fullPrompt
     });
+    
+    const latencyMs = performance.now() - t0;
+    telemetryService.logEvent({ type: 'assistant_call', action: `code_${mode}`, model: 'gemini-2.5-pro', tokensIn: 0, tokensOut: 0, latencyMs, cacheHit: false });
+
+    return response.text.trim();
+  }
+
+  public async generateTestsForCode(code: string, language: string): Promise<string> {
+    const t0 = performance.now();
+    const ai = getAiClient();
+    const prompt = `You are a software quality engineer. Write a suite of unit tests for the following ${language} code.
+Use a popular testing framework for the language (e.g., Jest for JavaScript/TypeScript, PyTest for Python).
+Return only the test code, without any explanations or markdown formatting.
+
+\`\`\`${language}
+${code}
+\`\`\``;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-pro',
+        contents: prompt,
+    });
+    
+    const latencyMs = performance.now() - t0;
+    telemetryService.logEvent({ type: 'assistant_call', action: 'generate_tests', model: 'gemini-2.5-pro', tokensIn: 0, tokensOut: 0, latencyMs, cacheHit: false });
 
     return response.text.trim();
   }
