@@ -7,6 +7,7 @@ export enum ModuleType {
   LocalStudio = 'Local Studio',
   ProjectForge = 'Project Forge',
   StoryWriter = 'Story Writer',
+  Analytics = 'Analytics',
 }
 
 export enum ChatMode {

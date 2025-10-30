@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModuleType } from '../types';
-import { DashboardIcon, ChatIcon, VisionIcon, GenerationIcon, LiveIcon, ServerIcon, ProjectForgeIcon, StoryWriterIcon } from './icons';
+import { DashboardIcon, ChatIcon, VisionIcon, GenerationIcon, LiveIcon, ServerIcon, ProjectForgeIcon, StoryWriterIcon, AnalyticsIcon } from './icons';
 
 interface SidebarProps {
   activeModule: ModuleType;
@@ -36,12 +36,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule }) => {
     { type: ModuleType.StoryWriter, icon: <StoryWriterIcon className="w-6 h-6" />, label: 'Story Writer' },
     { type: ModuleType.Live, icon: <LiveIcon className="w-6 h-6" />, label: 'Live Conversation' },
     { type: ModuleType.LocalStudio, icon: <ServerIcon className="w-6 h-6" />, label: 'Local Studio' },
+    { type: ModuleType.Analytics, icon: <AnalyticsIcon className="w-6 h-6" />, label: 'Analytics' },
   ];
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-gray-800 border-r border-gray-700">
       <div className="flex items-center justify-center h-20 border-b border-gray-700">
-        <h1 className="text-xl font-bold text-white tracking-wider">DLX Co-Pilot</h1>
+        <h1 className="text-xl font-bold text-white tracking-wider">DLX Co-Pilot 4.0</h1>
       </div>
       <nav className="flex-1 py-4">
         {navItems.map((item) => (

@@ -1,7 +1,7 @@
 {
-  "name": "dlx-co-pilot-3.0",
+  "name": "dlx-co-pilot-4.0",
   "private": true,
-  "version": "0.0.0",
+  "version": "4.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

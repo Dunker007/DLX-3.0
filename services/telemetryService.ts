@@ -4,7 +4,11 @@ type TelemetryEvent =
   | { type: 'entry_approve'; entryId: string; }
   | { type: 'embedding_job'; entryId: string; status: 'completed' | 'failed'; durationMs: number }
   | { type: 'rag_search'; query: string; results: number; latencyMs: number }
-  | { type: 'flag_change'; flagId: string; from: string; to: string; };
+  | { type: 'flag_change'; flagId: string; from: string; to: string; }
+  | { type: 'security_alert'; action: string; resource: string; severity: string }
+  | { type: 'metrics_cleanup'; removed: number; remaining: number }
+  | { type: 'model_comparison'; models: string[]; prompt: string }
+  | { type: 'collaboration_event'; action: string; projectId: string; userId: string };
 
 class TelemetryService {
   public logEvent(eventData: TelemetryEvent) {
