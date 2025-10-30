@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleType, StoryWriterEntry, FeatureFlagState } from '../types';
+import { ModuleType, StoryEntry, FeatureFlagState } from '../types';
 import { ChatIcon, VisionIcon, GenerationIcon, ProjectForgeIcon, StoryWriterIcon, BeakerIcon, EyeOffIcon } from './icons';
 import { storyWriterService } from '../services/storyWriterService';
 import { featureFlagService } from '../services/featureFlagService';
@@ -56,10 +56,10 @@ const ActionCard: React.FC<{ title: string, description: string, icon: React.Rea
     );
 };
 
-const StoryEntryCard: React.FC<{ entry: StoryWriterEntry; onClick: () => void }> = ({ entry, onClick }) => (
+const StoryEntryCard: React.FC<{ entry: StoryEntry; onClick: () => void }> = ({ entry, onClick }) => (
     <button onClick={onClick} className="bg-gray-800/50 rounded-lg p-4 flex flex-col text-left items-start hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700 w-full">
       <h4 className="text-md font-bold text-white truncate w-full">{entry.title}</h4>
-      <p className="text-xs text-gray-500 mb-2">{new Date(entry.dateUtc).toLocaleDateString()}</p>
+      <p className="text-xs text-gray-500 mb-2">{new Date(entry.date).toLocaleDateString()}</p>
       <div className="flex flex-wrap gap-1">
         {entry.tags.slice(0, 3).map(tag => (
           <span key={tag} className="px-2 py-0.5 text-xs bg-gray-700 text-gray-300 rounded-full">{tag}</span>
@@ -70,11 +70,11 @@ const StoryEntryCard: React.FC<{ entry: StoryWriterEntry; onClick: () => void }>
 
 
 const DashboardModule: React.FC<{ setActiveModule: (module: ModuleType) => void }> = ({ setActiveModule }) => {
-  const [recentEntries, setRecentEntries] = useState<StoryWriterEntry[]>([]);
+  const [recentEntries, setRecentEntries] = useState<StoryEntry[]>([]);
   const flags = featureFlagService.getFlags();
 
   useEffect(() => {
-    const entries = storyWriterService.getEntries().sort((a,b) => new Date(b.dateUtc).getTime() - new Date(a.dateUtc).getTime());
+    const entries = storyWriterService.getEntries().sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setRecentEntries(entries.slice(0, 4));
   }, []);
 

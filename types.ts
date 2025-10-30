@@ -47,65 +47,49 @@ export type FeatureFlags = {
   [key: string]: FeatureFlagState;
 };
 
+// --- Story Writer Types (Phase 1A Spec) ---
 
-// --- Story Writer Types ---
-
-export interface ReferenceBlock {
-  dvJobIds?: string[];
-  hudSnapshotIds?: string[];
-  controlHubCommentIds?: string[];
-  commitHashes?: string[];
-  externalDocs?: ExternalDocRef[];
+export enum EntryType {
+  Decision = 'decision',
+  Incident = 'incident',
+  Milestone = 'milestone',
+  Routine = 'routine',
+  Rollback = 'rollback',
+  Flip = 'flip'
 }
 
-export interface ExternalDocRef {
-  label: string;
-  url: string;
+export enum ReferenceType {
+  DVJob = 'dv-job',
+  HUDSnapshot = 'hud-snapshot',
+  ControlHubComment = 'control-hub-comment',
+  CommitHash = 'commit-hash',
+  External = 'external'
 }
 
-export interface RoleAttribution {
-  role: 'lux' | 'mini-lux' | 'scribe';
-  author: string; // user id/handle
-  contributionSummary: string;
+export interface Reference {
+  id: string;
+  type: ReferenceType;
+  url?: string;
+  description: string;
+  timestamp?: string;
 }
 
-export interface EnvironmentFingerprint {
-  modelVersions?: Record<string,string>; // e.g. {'local_llm':'llama3-8b-q4','router':'1.2.0'}
-  systemMetrics?: {
-    cpuLoad?: number;
-    memGB?: number;
-    gpuUtil?: number;
-  };
-  dlxVersion?: string;
-}
-
-export interface StoryWriterEntryEmbeddings {
-    executiveSummary?: number[];
-    decisionsRationale?: number[];
-    risksMitigations?: number[];
-}
-
-export interface StoryWriterEntry {
-  id: string; // ULID or UUID
-  createdUtc: string;
-  updatedUtc: string;
+export interface StoryEntry {
+  id: string;
   title: string;
-  dateUtc: string; // explicit event date (may differ from createdUtc)
+  date: string; // UTC YYYY-MM-DD HH:MM:SS
   executiveSummary: string;
-  whatChanged: string; // bullet list or structured diff summary
+  whatChanged: string;
   decisionsRationale: string;
   risksMitigations: string;
-  references: ReferenceBlock;
-  tags: string[]; // e.g. ['deploy', 'rollback', 'incident', 'optimization']
-  roleAttributions: RoleAttribution[];
-  status: 'active' | 'superseded';
-  revision: number;
-  supersedesEntryId?: string; // if this replaces prior entry entirely
-  environmentFingerprint?: EnvironmentFingerprint; // optional Phase 1
-  narrativeExtended?: string; // optional long-form
-  isDraft?: boolean;
-  embeddings?: StoryWriterEntryEmbeddings;
-  hash?: string; // SHA-256 hash of the content for integrity
+  references: Reference[];
+  type: EntryType;
+  author: 'lux' | 'mini-lux' | 'scribe';
+  version: number;
+  status: 'draft' | 'published' | 'archived';
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const TAG_SUGGESTIONS = [
