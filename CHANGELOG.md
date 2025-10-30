@@ -63,7 +63,7 @@ The 75% price increase is justified by:
 5. **Professional Tools**: Code review workflows, security features, performance monitoring
 
 #### Technical Improvements
-- **Codebase Growth**: Expanded from ~2,800 to ~42,000+ lines of production code
+- **Codebase Growth**: Expanded from ~2,800 to ~4,800 lines of production code (+71%)
 - **New Services**: 5 new enterprise-grade services with comprehensive functionality
 - **Module Count**: Increased from 8 to 9 modules
 - **Feature Flags**: 19 features (up from 12), with 15 active/preview
@@ -120,7 +120,7 @@ The 75% price increase is justified by:
 | Cost Tracking | None | Real-time Multi-Model |
 | Code Review | None | Full Workflow |
 | Data Export | None | JSON/CSV |
-| Lines of Code | ~2,800 | ~42,000+ |
+| Lines of Code | ~2,800 | ~4,800 (+71%) |
 
 ## Migration Guide
 
