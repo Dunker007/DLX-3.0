@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModuleType } from '../types';
-import { DashboardIcon, ChatIcon, VisionIcon, GenerationIcon, LiveIcon, ServerIcon, ProjectForgeIcon } from './icons';
+import { DashboardIcon, ChatIcon, VisionIcon, GenerationIcon, LiveIcon, ServerIcon, ProjectForgeIcon, StoryWriterIcon } from './icons';
 
 interface SidebarProps {
   activeModule: ModuleType;
@@ -33,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule }) => {
     { type: ModuleType.Vision, icon: <VisionIcon className="w-6 h-6" />, label: 'Vision Lab' },
     { type: ModuleType.Generation, icon: <GenerationIcon className="w-6 h-6" />, label: 'Asset Forge' },
     { type: ModuleType.ProjectForge, icon: <ProjectForgeIcon className="w-6 h-6" />, label: 'Project Forge' },
+    { type: ModuleType.StoryWriter, icon: <StoryWriterIcon className="w-6 h-6" />, label: 'Story Writer' },
     { type: ModuleType.Live, icon: <LiveIcon className="w-6 h-6" />, label: 'Live Conversation' },
     { type: ModuleType.LocalStudio, icon: <ServerIcon className="w-6 h-6" />, label: 'Local Studio' },
   ];
