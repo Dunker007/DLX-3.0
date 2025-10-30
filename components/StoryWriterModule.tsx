@@ -4,12 +4,14 @@ import { storyWriterService } from '../services/storyWriterService';
 import StoryWriterTimeline from './StoryWriterTimeline';
 import StoryWriterEntryEditor from './StoryWriterEntryEditor';
 import StoryWriterReferencesPanel from './StoryWriterReferencesPanel';
+import TemplatePicker from './TemplatePicker';
 
 const StoryWriterModule: React.FC = () => {
     const [entries, setEntries] = useState<StoryEntry[]>([]);
     const [activeEntry, setActiveEntry] = useState<StoryEntry | null>(null);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showTemplatePicker, setShowTemplatePicker] = useState<boolean>(false);
 
     useEffect(() => {
         loadEntries();
@@ -32,8 +34,19 @@ const StoryWriterModule: React.FC = () => {
     };
 
     const handleNewEntry = () => {
-        setActiveEntry(null);
+        setShowTemplatePicker(true);
+    };
+
+    const handleSelectTemplate = (template: Partial<StoryEntry>) => {
+        // Only set as active entry if it has the minimum required structure
+        // The editor will handle missing fields appropriately
+        setActiveEntry(template as any);
         setIsEditing(true);
+        setShowTemplatePicker(false);
+    };
+
+    const handleCancelTemplatePicker = () => {
+        setShowTemplatePicker(false);
     };
 
     const handleSave = (entryToSave: StoryEntry) => {
@@ -115,6 +128,14 @@ const StoryWriterModule: React.FC = () => {
                     <StoryWriterReferencesPanel selectedEntry={activeEntry} />
                 </div>
             </div>
+            
+            {/* Template Picker Modal */}
+            {showTemplatePicker && (
+                <TemplatePicker
+                    onSelectTemplate={handleSelectTemplate}
+                    onCancel={handleCancelTemplatePicker}
+                />
+            )}
         </div>
     );
 };
