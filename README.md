@@ -191,6 +191,22 @@ const auditLogs = securityService.getAuditLogs({ severity: 'critical' });
 - **Data Export**: GDPR-compliant audit log exports
 - **Role-Based Access**: Fine-grained permission control
 
+### Security Considerations
+
+**For Self-Hosted Deployments:**
+- API keys are stored in browser localStorage for convenience in self-hosted scenarios
+- Users control the browser environment and security
+- Consider using environment variables for production deployments
+- Implement encryption at rest for sensitive multi-user deployments
+- Use secure key management systems (e.g., HashiCorp Vault) for enterprise scale
+
+**Best Practices:**
+1. Run DLX Co-Pilot 4.0 on a secure, trusted device
+2. Use HTTPS for all connections
+3. Regularly rotate API keys (automated reminders included)
+4. Review audit logs for suspicious activity
+5. Export and backup audit trails regularly
+
 ## 📊 Analytics & Reporting
 
 ### Available Metrics

@@ -248,6 +248,13 @@ class SecurityService {
 
   private saveApiKeys() {
     try {
+      // Note: API keys are stored in browser localStorage for this self-hosted application.
+      // In production deployments, consider:
+      // 1. Using environment variables for sensitive keys
+      // 2. Implementing encryption at rest
+      // 3. Using secure key management systems (e.g., HashiCorp Vault)
+      // 4. Browser localStorage is acceptable for self-hosted, single-user scenarios
+      //    where the user controls the environment and browser security
       localStorage.setItem(STORAGE_KEY_KEYS, JSON.stringify(this.apiKeys));
     } catch (e) {
       console.error('Failed to save API keys', e);
