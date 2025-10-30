@@ -42,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-gray-800 border-r border-gray-700">
       <div className="flex items-center justify-center h-20 border-b border-gray-700">
-        <h1 className="text-xl font-bold text-white tracking-wider">DLX Co-Pilot 4.0</h1>
+        <h1 className="text-xl font-bold text-white tracking-wider">DLX Co-Pilot 4.1</h1>
       </div>
       <nav className="flex-1 py-4">
         {navItems.map((item) => (

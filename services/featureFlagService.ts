@@ -8,7 +8,7 @@ const defaultFlags: FeatureFlags = {
   vibeWorkspace: 'active',
   aiAssistants: 'active',
   ragLite: 'active',
-  automationEngine: 'preview',
+  automationEngine: 'active',
   tradingBot: 'inactive',
   marketIntel: 'preview',
   revenueDashboard: 'active',
@@ -23,6 +23,8 @@ const defaultFlags: FeatureFlags = {
   multiModel: 'active',
   security: 'active',
   performance: 'active',
+  keyboardShortcuts: 'active',
+  workspacePersistence: 'active',
 };
 
 class FeatureFlagService {

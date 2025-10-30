@@ -8,15 +8,15 @@ const allFeatures = [
   { id: 'vibeWorkspace', title: "Vibe Coding Workspace", description: "Monaco Editor with AI autocomplete, live preview, and refactoring.", icon: "🎨" },
   { id: 'aiAssistants', title: "AI Development Assistants", description: "Code reviewer, bug finder, documentation generator, and test generator.", icon: "🤖" },
   { id: 'assetGeneration', title: "Asset Generation Suite", description: "AI logo/icon generator, color palettes, copywriting, and SEO metadata.", icon: "🖼️" },
-  { id: 'ragLite', title: "RAG-Powered Knowledge System", description: "Context-aware AI from your documents, tutorials, and codebase.", icon: "🧠" },
+  { id: 'keyboardShortcuts', title: "Keyboard Shortcuts", description: "Customizable shortcuts for navigation, editing, and AI features.", icon: "⌨️" },
+  { id: 'workspacePersistence', title: "Workspace Persistence", description: "Auto-save, snapshots, and state restoration for seamless workflows.", icon: "💾" },
+  { id: 'automationEngine', title: "Automation Engine", description: "Schedule tasks, trigger actions, and automate workflows with ease.", icon: "🤖" },
   { id: 'multiModel', title: "Multi-Model AI Platform", description: "Compare Gemini, GPT-4, Claude, and local models with cost tracking.", icon: "🤹" },
   { id: 'collaborationTools', title: "Team Collaboration Suite", description: "Shared projects, code reviews, comments, and real-time editing.", icon: "👥" },
   { id: 'analytics', title: "Advanced Analytics Dashboard", description: "Performance metrics, cost tracking, usage reports, and data export.", icon: "📊" },
   { id: 'security', title: "Enterprise Security & Audit", description: "API key rotation, audit logging, rate limiting, and compliance tools.", icon: "🔒" },
   { id: 'performance', title: "Performance Monitoring", description: "Real-time metrics, web vitals tracking, and optimization insights.", icon: "⚡" },
-  { id: 'automationEngine', title: "Automation Engine", description: "Templates for Affiliate/SEO sites, SaaS, Trading Bots, and more.", icon: "💰" },
-  { id: 'marketIntel', title: "Market Intelligence", description: "Advanced Trading Bot Builder, backtesting, and exchange integrations.", icon: "📈" },
-  { id: 'localStudio', title: "Local LLM Integration Hub", description: "Unified API adapter for local models, with management and monitoring.", icon: "🏠" },
+  { id: 'ragLite', title: "RAG-Powered Knowledge System", description: "Context-aware AI from your documents, tutorials, and codebase.", icon: "🧠" },
 ];
 
 const FlagBadge: React.FC<{ state: FeatureFlagState }> = ({ state }) => {
@@ -85,8 +85,8 @@ const DashboardModule: React.FC<{ setActiveModule: (module: ModuleType) => void 
   return (
     <div className="animate-fade-in">
       <header className="mb-8">
-        <h1 className="text-4xl font-bold text-white tracking-tight">DLX Co-Pilot 4.0</h1>
-        <p className="mt-2 text-lg text-gray-400">Enterprise-grade AI development platform with multi-model support and advanced collaboration.</p>
+        <h1 className="text-4xl font-bold text-white tracking-tight">DLX Co-Pilot 4.1</h1>
+        <p className="mt-2 text-lg text-gray-400">Enterprise-grade AI development platform with automation, keyboard shortcuts, and workspace persistence.</p>
       </header>
 
       <section className="mb-12">
