@@ -1,0 +1,110 @@
+name: Auto-Rebase and Conflict Prevention
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    # Run daily to check for stale PRs that need rebasing
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-conflicts:
+    runs-on: ubuntu-latest
+    name: Check and Report Conflicts
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for merge conflicts
+        id: check_conflicts
+        run: |
+          git fetch origin main
+          
+          # Get current branch
+          CURRENT_BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          echo "Current branch: $CURRENT_BRANCH"
+          
+          # Check if we can merge cleanly
+          git merge-tree $(git merge-base origin/main HEAD) origin/main HEAD > /tmp/merge-tree-output.txt || true
+          
+          if grep -q "<<<<<" /tmp/merge-tree-output.txt; then
+            echo "has_conflicts=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Merge conflicts detected"
+            
+            # Extract conflict files
+            grep -B 5 "<<<<<" /tmp/merge-tree-output.txt | grep "^+++ " | sed 's/^+++ b\///' | sort -u > /tmp/conflict-files.txt || true
+            
+            if [ -s /tmp/conflict-files.txt ]; then
+              echo "Conflicting files:"
+              cat /tmp/conflict-files.txt
+              echo "conflict_files<<EOF" >> $GITHUB_OUTPUT
+              cat /tmp/conflict-files.txt >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_conflicts=false" >> $GITHUB_OUTPUT
+            echo "✅ No merge conflicts detected"
+          fi
+
+      - name: Comment on PR if conflicts found
+        if: github.event_name == 'pull_request' && steps.check_conflicts.outputs.has_conflicts == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const conflictFiles = `${{ steps.check_conflicts.outputs.conflict_files }}`.trim();
+            const filesText = conflictFiles ? `\n\nConflicting files:\n\`\`\`\n${conflictFiles}\n\`\`\`\` : '';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `⚠️ **Merge Conflicts Detected**\n\nThis PR has conflicts with the base branch that need to be resolved before merging.${filesText}\n\n**To resolve:**\n1. Pull the latest changes from main: \`git fetch origin main\`\n2. Rebase your branch: \`git rebase origin/main\`\n3. Resolve conflicts and push: \`git push --force-with-lease\``
+            });
+
+      - name: Auto-update branch
+        if: github.event_name == 'pull_request' && steps.check_conflicts.outputs.has_conflicts == 'false'
+        run: |
+          echo "Branch is up to date or can be merged cleanly"
+          echo "No automatic rebase needed"
+
+  enforce-branch-protection:
+    runs-on: ubuntu-latest
+    name: Ensure Branch Protection Rules
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Check branch protection
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const { data } = await github.rest.repos.getBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'main'
+              });
+              
+              console.log('Branch protection rules:', JSON.stringify(data, null, 2));
+              
+              // Check if required status checks exist
+              if (!data.required_status_checks?.strict) {
+                console.log('⚠️ Strict status checks not enabled - branches may become stale');
+              } else {
+                console.log('✅ Strict status checks enabled - branches must be up to date');
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                console.log('⚠️ No branch protection rules found for main branch');
+                console.log('Consider adding branch protection to prevent merge conflicts');
+              } else {
+                throw error;
+              }
+            }

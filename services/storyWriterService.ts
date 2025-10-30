@@ -1,5 +1,7 @@
 import { StoryEntry, EntryType, ReferenceType } from '../types';
 import { telemetryService } from './telemetryService';
+import { performanceMonitoringService } from './performanceMonitoringService';
+import { securityService } from './securityService';
 
 const ENTRIES_STORAGE_KEY = 'dlx-story-entries';
 
@@ -105,8 +107,18 @@ class StoryWriterService {
     // --- Public API ---
 
     public saveEntry(entryData: StoryEntry): StoryEntry {
+        const operationId = crypto.randomUUID();
         const now = new Date().toISOString();
-        if (!entryData.id || !this.entries.has(entryData.id)) {
+        const isNewEntry = !entryData.id || !this.entries.has(entryData.id);
+        
+        // Start performance tracking
+        performanceMonitoringService.startMetric(
+            operationId,
+            isNewEntry ? 'entry_creation' : 'entry_update',
+            { entryType: entryData.type, tags: entryData.tags }
+        );
+
+        if (isNewEntry) {
             // Create new entry
             const newEntry: StoryEntry = {
                 ...entryData,
@@ -115,8 +127,32 @@ class StoryWriterService {
                 updatedAt: now,
                 version: 1,
             };
+
+            // Security validation
+            const validation = securityService.validateEntry(newEntry);
+            if (!validation.isValid) {
+                console.warn('Entry validation issues:', validation.issues);
+            }
+
+            // Security audit
+            securityService.logAudit({
+                action: 'create',
+                entryId: newEntry.id,
+                userRole: newEntry.author,
+                metadata: { type: newEntry.type, tags: newEntry.tags },
+            });
+
             this.entries.set(newEntry.id, newEntry);
-            telemetryService.logEvent({ type: 'entry_create', entryId: newEntry.id, tags: newEntry.tags, creationLatencyMs: 0, isDraft: newEntry.status === 'draft' });
+            
+            const durationMs = performanceMonitoringService.endMetric(operationId) || 0;
+            telemetryService.logEvent({ 
+                type: 'entry_create', 
+                entryId: newEntry.id, 
+                tags: newEntry.tags, 
+                creationLatencyMs: durationMs, 
+                isDraft: newEntry.status === 'draft' 
+            });
+            
             this.saveToStorage();
             return newEntry;
         } else {
@@ -128,7 +164,21 @@ class StoryWriterService {
                 updatedAt: now,
                 version: existing.version + 1,
             };
+
+            // Track changes for audit
+            const changes = securityService.trackChanges(existing, updatedEntry);
+            
+            // Security audit
+            securityService.logAudit({
+                action: 'update',
+                entryId: updatedEntry.id,
+                userRole: updatedEntry.author,
+                changes,
+                metadata: { previousVersion: existing.version, newVersion: updatedEntry.version },
+            });
+
             this.entries.set(updatedEntry.id, updatedEntry);
+            performanceMonitoringService.endMetric(operationId);
             this.saveToStorage();
             return updatedEntry;
         }
@@ -148,21 +198,38 @@ class StoryWriterService {
     }
 
     public deleteEntry(id: string): void {
+        const entry = this.entries.get(id);
+        if (entry) {
+            // Security audit for deletion
+            securityService.logAudit({
+                action: 'delete',
+                entryId: id,
+                userRole: entry.author,
+                metadata: { title: entry.title, type: entry.type },
+            });
+        }
         this.entries.delete(id);
         this.saveToStorage();
     }
 
     public searchEntries(query: string): StoryEntry[] {
+        const operationId = crypto.randomUUID();
+        performanceMonitoringService.startMetric(operationId, 'search', { query });
+        
         const allEntries = this.getEntries();
         if (!query.trim()) {
+            performanceMonitoringService.endMetric(operationId);
             return allEntries;
         }
         const lowerCaseQuery = query.toLowerCase();
-        return allEntries.filter(entry =>
+        const results = allEntries.filter(entry =>
             entry.title.toLowerCase().includes(lowerCaseQuery) ||
             entry.executiveSummary.toLowerCase().includes(lowerCaseQuery) ||
             entry.tags.some(tag => tag.toLowerCase().includes(lowerCaseQuery))
         );
+        
+        performanceMonitoringService.endMetric(operationId);
+        return results;
     }
 }
 
