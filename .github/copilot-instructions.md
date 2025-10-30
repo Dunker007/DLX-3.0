@@ -16,8 +16,8 @@ This serves as a comprehensive command center for developers and operators.
 
 - **Frontend Framework**: React 19.2.0 with TypeScript
 - **Build Tool**: Vite 6.2.0
-- **AI Integration**: Google Gemini API (@google/genai)
-- **Code Editor**: Monaco Editor
+- **AI Integration**: Google Gemini API (@google/genai 1.28.0)
+- **Code Editor**: Monaco Editor 0.54.0
 - **Testing**: Vitest 4.0.5
 
 ## Project Structure
