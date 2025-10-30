@@ -11,6 +11,7 @@ const LiveModule = lazy(() => import('./components/LiveModule'));
 const LocalStudioModule = lazy(() => import('./components/LocalStudioModule'));
 const ProjectForgeModule = lazy(() => import('./components/ProjectForgeModule'));
 const StoryWriterModule = lazy(() => import('./components/StoryWriterModule'));
+const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
 
 const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleType>(ModuleType.Dashboard);
@@ -33,6 +34,8 @@ const App: React.FC = () => {
         return <ProjectForgeModule />;
       case ModuleType.StoryWriter:
         return <StoryWriterModule />;
+      case ModuleType.Analytics:
+        return <AnalyticsDashboard />;
       default:
         return <DashboardModule setActiveModule={setActiveModule} />;
     }

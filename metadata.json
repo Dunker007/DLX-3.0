@@ -1,7 +1,14 @@
 {
-  "name": "DLX Co-Pilot 3.0",
-  "description": "A self-hosted AI web creation studio and strategic partner. It integrates Gemini's multi-modal capabilities for chat, analysis, code generation, asset creation, and real-time conversation, serving as a comprehensive command center for developers and operators.",
+  "name": "DLX Co-Pilot 4.0",
+  "version": "4.0.0",
+  "description": "Enterprise-grade self-hosted AI development platform with multi-model support, advanced collaboration tools, security features, and comprehensive analytics. Integrates Gemini's multi-modal capabilities plus OpenAI, Anthropic, and local models for chat, analysis, code generation, asset creation, and real-time conversation.",
   "requestFramePermissions": [
     "microphone"
-  ]
+  ],
+  "features": {
+    "enterprise": ["Multi-model AI support", "Advanced security & audit logging", "Team collaboration", "Performance monitoring"],
+    "ai": ["Context caching", "Model comparison", "Intelligent prompt optimization", "Code quality analysis"],
+    "collaboration": ["Shared projects", "Real-time editing", "Code review workflows", "Version control integration"],
+    "analytics": ["Usage tracking", "Cost optimization", "Export capabilities", "Custom reports"]
+  }
 }
