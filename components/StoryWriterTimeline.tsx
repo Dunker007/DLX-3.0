@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { StoryEntry, EntryType } from '../types';
 import { 
     DocumentTextIcon, ExclamationTriangleIcon, CheckCircleIcon, ClockIcon, 
@@ -23,7 +23,7 @@ const EntryTypeIcon: React.FC<{ type: EntryType, className: string }> = ({ type,
     }
 };
 
-const StoryWriterTimeline: React.FC<StoryWriterTimelineProps> = ({ entries, selectedEntry, onSelectEntry }) => {
+const StoryWriterTimeline: React.FC<StoryWriterTimelineProps> = memo(({ entries, selectedEntry, onSelectEntry }) => {
     const [filter, setFilter] = useState<EntryType | 'all'>('all');
 
     const filteredEntries = entries.filter(entry => 
@@ -80,6 +80,6 @@ const StoryWriterTimeline: React.FC<StoryWriterTimelineProps> = ({ entries, sele
             </ul>
         </div>
     );
-};
+});
 
 export default StoryWriterTimeline;

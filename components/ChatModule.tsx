@@ -1,9 +1,42 @@
-
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { ChatMode, ChatMessage } from '../types';
 import { geminiService } from '../services/geminiService';
 import Spinner from './Spinner';
 import { PlayIcon, StopIcon, MicrophoneIcon } from './icons';
+
+const MessageBubble = memo(({ msg, onPlayTTS }: { msg: ChatMessage, onPlayTTS: (message: ChatMessage) => void }) => {
+  return (
+    <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+      <div className={`max-w-lg p-3 rounded-lg ${msg.role === 'user' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-200'}`}>
+        <p className="whitespace-pre-wrap">{msg.text}</p>
+        {msg.role === 'model' && (
+          <div className="flex items-center mt-2">
+              <button onClick={() => onPlayTTS(msg)} className="text-gray-400 hover:text-white">
+                  <PlayIcon className="w-5 h-5"/>
+              </button>
+              {msg.groundingChunks && msg.groundingChunks.length > 0 && (
+                  <div className="ml-4 text-xs text-gray-400">
+                  <h4 className="font-bold mb-1">Sources:</h4>
+                  <ul className="list-disc list-inside">
+                      {msg.groundingChunks.map((chunk: any, index: number) => {
+                          const source = chunk.web || chunk.maps;
+                          return source && source.uri ? (
+                              <li key={index}>
+                                  <a href={source.uri} target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 underline">
+                                      {source.title || `Source ${index + 1}`}
+                                  </a>
+                              </li>
+                          ) : null;
+                      })}
+                  </ul>
+                  </div>
+              )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 const ChatModule: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -131,9 +164,9 @@ const ChatModule: React.FC = () => {
     }
   };
 
-  const handleClearChat = () => {
+  const handleClearChat = useCallback(() => {
     setMessages([]);
-  }
+  }, []);
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
@@ -157,35 +190,7 @@ const ChatModule: React.FC = () => {
       
       <div className="flex-1 overflow-y-auto p-4 bg-gray-800/50 space-y-4">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-lg p-3 rounded-lg ${msg.role === 'user' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-200'}`}>
-              <p className="whitespace-pre-wrap">{msg.text}</p>
-              {msg.role === 'model' && (
-                <div className="flex items-center mt-2">
-                    <button onClick={() => handlePlayTTS(msg)} className="text-gray-400 hover:text-white">
-                        <PlayIcon className="w-5 h-5"/>
-                    </button>
-                    {msg.groundingChunks && msg.groundingChunks.length > 0 && (
-                        <div className="ml-4 text-xs text-gray-400">
-                        <h4 className="font-bold mb-1">Sources:</h4>
-                        <ul className="list-disc list-inside">
-                            {msg.groundingChunks.map((chunk: any, index: number) => {
-                                const source = chunk.web || chunk.maps;
-                                return source && source.uri ? (
-                                    <li key={index}>
-                                        <a href={source.uri} target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 underline">
-                                            {source.title || `Source ${index + 1}`}
-                                        </a>
-                                    </li>
-                                ) : null;
-                            })}
-                        </ul>
-                        </div>
-                    )}
-                </div>
-              )}
-            </div>
-          </div>
+          <MessageBubble key={msg.id} msg={msg} onPlayTTS={handlePlayTTS} />
         ))}
         {isLoading && (
           <div className="flex justify-start">

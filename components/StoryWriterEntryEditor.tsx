@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { StoryEntry, EntryType, TAG_SUGGESTIONS } from '../types';
 
 interface EntryEditorProps {
@@ -10,7 +10,7 @@ interface EntryEditorProps {
     onDelete: (id: string) => void;
 }
 
-const EntryDisplay: React.FC<{ entry: StoryEntry; onEdit: () => void }> = ({ entry, onEdit }) => (
+const EntryDisplay: React.FC<{ entry: StoryEntry; onEdit: () => void }> = memo(({ entry, onEdit }) => (
     <div className="prose prose-invert max-w-none prose-h1:text-2xl prose-h1:mb-2 prose-p:text-gray-300 prose-li:text-gray-300">
         <div className="flex justify-between items-start">
             <div>
@@ -33,7 +33,7 @@ const EntryDisplay: React.FC<{ entry: StoryEntry; onEdit: () => void }> = ({ ent
         <h2>Risks & Mitigations</h2>
         <pre className="whitespace-pre-wrap font-sans bg-gray-900/50 p-2 rounded">{entry.risksMitigations}</pre>
     </div>
-);
+));
 
 const EntryForm: React.FC<Omit<EntryEditorProps, 'onEdit'>> = ({ entry, onSave, onCancel, onDelete }) => {
     const isNew = !entry;

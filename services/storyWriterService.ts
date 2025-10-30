@@ -66,6 +66,7 @@ const initialEntries: StoryEntry[] = [
 
 class StoryWriterService {
     private entries: Map<string, StoryEntry> = new Map();
+    private sortedEntriesCache: StoryEntry[] | null = null;
 
     constructor() {
         this.loadFromStorage();
@@ -91,9 +92,14 @@ class StoryWriterService {
         try {
             const array = Array.from(this.entries.values());
             localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify(array));
+            this.invalidateCache();
         } catch (e) {
             console.error(`Failed to save to storage`, e);
         }
+    }
+
+    private invalidateCache() {
+        this.sortedEntriesCache = null;
     }
 
     // --- Public API ---
@@ -129,7 +135,12 @@ class StoryWriterService {
     }
 
     public getEntries(): StoryEntry[] {
-        return Array.from(this.entries.values()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (this.sortedEntriesCache) {
+            return this.sortedEntriesCache;
+        }
+        const sorted = Array.from(this.entries.values()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        this.sortedEntriesCache = sorted;
+        return sorted;
     }
 
     public getEntryById(id: string): StoryEntry | undefined {

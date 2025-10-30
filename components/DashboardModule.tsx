@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { ModuleType, StoryEntry, FeatureFlagState } from '../types';
 import { ChatIcon, VisionIcon, GenerationIcon, ProjectForgeIcon, StoryWriterIcon, BeakerIcon, EyeOffIcon } from './icons';
 import { storyWriterService } from '../services/storyWriterService';
@@ -35,16 +35,16 @@ const FlagBadge: React.FC<{ state: FeatureFlagState }> = ({ state }) => {
 };
 
 
-const FeatureCard: React.FC<{ title: string, description: string, icon: string, flag: FeatureFlagState }> = ({ title, description, icon, flag }) => (
+const FeatureCard: React.FC<{ title: string, description: string, icon: string, flag: FeatureFlagState }> = memo(({ title, description, icon, flag }) => (
   <div className={`bg-gray-800/50 rounded-lg p-6 flex flex-col items-start transition-all duration-200 border border-gray-700 relative ${flag === 'active' || flag === 'preview' || flag === 'labs' ? 'hover:bg-gray-700/50' : 'opacity-50'}`}>
     <FlagBadge state={flag} />
     <div className="text-3xl mb-4">{icon}</div>
     <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
     <p className="text-gray-400 text-sm">{description}</p>
   </div>
-);
+));
 
-const ActionCard: React.FC<{ title: string, description: string, icon: React.ReactNode, onClick: () => void, flag: FeatureFlagState }> = ({ title, description, icon, onClick, flag }) => {
+const ActionCard: React.FC<{ title: string, description: string, icon: React.ReactNode, onClick: () => void, flag: FeatureFlagState }> = memo(({ title, description, icon, onClick, flag }) => {
     const isActive = flag === 'active' || flag === 'preview' || flag === 'labs';
     return (
         <button onClick={onClick} disabled={!isActive} className={`bg-cyan-900/50 rounded-lg p-6 flex flex-col text-left items-start transition-colors duration-200 border border-cyan-700 w-full h-full relative ${isActive ? 'hover:bg-cyan-800/50' : 'opacity-50 cursor-not-allowed'}`}>
@@ -54,9 +54,9 @@ const ActionCard: React.FC<{ title: string, description: string, icon: React.Rea
           <p className="text-gray-400 text-sm">{description}</p>
         </button>
     );
-};
+});
 
-const StoryEntryCard: React.FC<{ entry: StoryEntry; onClick: () => void }> = ({ entry, onClick }) => (
+const StoryEntryCard: React.FC<{ entry: StoryEntry; onClick: () => void }> = memo(({ entry, onClick }) => (
     <button onClick={onClick} className="bg-gray-800/50 rounded-lg p-4 flex flex-col text-left items-start hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700 w-full">
       <h4 className="text-md font-bold text-white truncate w-full">{entry.title}</h4>
       <p className="text-xs text-gray-500 mb-2">{new Date(entry.date).toLocaleDateString()}</p>
@@ -66,7 +66,7 @@ const StoryEntryCard: React.FC<{ entry: StoryEntry; onClick: () => void }> = ({ 
         ))}
       </div>
     </button>
-);
+));
 
 
 const DashboardModule: React.FC<{ setActiveModule: (module: ModuleType) => void }> = ({ setActiveModule }) => {

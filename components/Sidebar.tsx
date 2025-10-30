@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ModuleType } from '../types';
-import { DashboardIcon, ChatIcon, VisionIcon, GenerationIcon, LiveIcon, ServerIcon, ProjectForgeIcon, StoryWriterIcon } from './icons';
+import { DashboardIcon, ChatIcon, VisionIcon, GenerationIcon, LiveIcon, ServerIcon, ProjectForgeIcon, StoryWriterIcon, CogIcon } from './icons';
 
 interface SidebarProps {
   activeModule: ModuleType;
@@ -12,7 +12,7 @@ const NavItem: React.FC<{
   label: string;
   isActive: boolean;
   onClick: () => void;
-}> = ({ icon, label, isActive, onClick }) => (
+}> = memo(({ icon, label, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={`flex items-center w-full px-4 py-3 text-sm font-medium transition-colors duration-150 ${
@@ -24,7 +24,7 @@ const NavItem: React.FC<{
     {icon}
     <span className="ml-4">{label}</span>
   </button>
-);
+));
 
 const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule }) => {
   const navItems = [
@@ -36,6 +36,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule }) => {
     { type: ModuleType.StoryWriter, icon: <StoryWriterIcon className="w-6 h-6" />, label: 'Story Writer' },
     { type: ModuleType.Live, icon: <LiveIcon className="w-6 h-6" />, label: 'Live Conversation' },
     { type: ModuleType.LocalStudio, icon: <ServerIcon className="w-6 h-6" />, label: 'Local Studio' },
+  ];
+
+  const adminItems = [
+     { type: ModuleType.FeatureFlags, icon: <CogIcon className="w-6 h-6" />, label: 'Feature Flags' },
   ];
 
   return (
@@ -54,6 +58,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule }) => {
           />
         ))}
       </nav>
+      <div className="py-4 border-t border-gray-700">
+         {adminItems.map((item) => (
+            <NavItem
+                key={item.type}
+                icon={item.icon}
+                label={item.label}
+                isActive={activeModule === item.type}
+                onClick={() => setActiveModule(item.type)}
+            />
+        ))}
+      </div>
     </aside>
   );
 };

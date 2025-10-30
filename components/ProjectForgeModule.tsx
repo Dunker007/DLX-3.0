@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { editor } from 'monaco-editor';
 import CodeEditor from './CodeEditor';
 import { Project, ProjectFile } from '../types';
 import { geminiService } from '../services/geminiService';
 import Spinner from './Spinner';
-import { CodeIcon, WandIcon, SearchIcon } from './icons';
+import { CodeIcon, WandIcon, SearchIcon, PlusIcon, PencilIcon, TrashIcon } from './icons';
+import { useDebounce } from '../hooks/useDebounce';
 
 const defaultFiles: ProjectFile[] = [
     {
@@ -55,6 +56,22 @@ const defaultProject: Project = {
 
 type RightPanelTab = 'vibe' | 'preview';
 
+const getLanguageForFile = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+        case 'html': return 'html';
+        case 'css': return 'css';
+        case 'js':
+        case 'jsx':
+        case 'ts':
+        case 'tsx':
+            return 'javascript';
+        case 'json': return 'json';
+        case 'md': return 'markdown';
+        default: return 'plaintext';
+    }
+};
+
 const ReviewModal: React.FC<{ content: string; onClose: () => void; title: string }> = ({ content, onClose, title }) => (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
@@ -87,25 +104,26 @@ const ProjectForgeModule: React.FC = () => {
     const [modalContent, setModalContent] = useState<{title: string, content: string} | null>(null);
 
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+    const debouncedProject = useDebounce(project, 500);
     
     useEffect(() => {
         try {
-            localStorage.setItem('dlx-project-forge', JSON.stringify(project));
+            localStorage.setItem('dlx-project-forge', JSON.stringify(debouncedProject));
         } catch (e) {
             console.error("Failed to save project to local storage", e);
         }
-    }, [project]);
+    }, [debouncedProject]);
 
     const activeFile = useMemo(() => project.files.find(f => f.name === activeFileName), [project.files, activeFileName]);
 
-    const handleFileContentChange = (newContent: string) => {
+    const handleFileContentChange = useCallback((newContent: string) => {
         setProject(p => ({
             ...p,
             files: p.files.map(file =>
                 file.name === activeFileName ? { ...file, content: newContent } : file
             )
         }));
-    };
+    }, [activeFileName]);
     
     const iframeSrcDoc = useMemo(() => {
         const htmlFile = project.files.find(f => f.name === 'index.html');
@@ -115,15 +133,15 @@ const ProjectForgeModule: React.FC = () => {
         
         let html = htmlFile.content;
         if (cssFile) {
-            html = html.replace('</head>', `<style>${cssFile.content}</style></head>`);
+            html = html.replace(/<\/head>/i, `<style>${cssFile.content}</style></head>`);
         }
         if (jsFile) {
-            html = html.replace('</body>', `<script>${jsFile.content}</script></body>`);
+            html = html.replace(/<\/body>/i, `<script>${jsFile.content}</script></body>`);
         }
         return html;
     }, [project.files]);
 
-    const handleGenerateCode = async () => {
+    const handleGenerateCode = useCallback(async () => {
         if (!vibePrompt.trim()) return;
         setIsGenerating(true);
         setGeneratedCode('');
@@ -136,14 +154,14 @@ const ProjectForgeModule: React.FC = () => {
         } finally {
             setIsGenerating(false);
         }
-    };
+    }, [vibePrompt, project]);
 
-    const handleInsertCode = () => {
+    const handleInsertCode = useCallback(() => {
         if (!generatedCode || !activeFile) return;
         handleFileContentChange(activeFile.content + '\n' + generatedCode);
-    };
+    }, [generatedCode, activeFile, handleFileContentChange]);
 
-    const handleCodeAction = async (mode: 'refactor' | 'review' | 'tests') => {
+    const handleCodeAction = useCallback(async (mode: 'refactor' | 'review' | 'tests') => {
         if (!editorRef.current || !activeFile) return;
         const selection = editorRef.current.getSelection();
         const codeToProcess = (selection && !selection.isEmpty()) 
@@ -174,14 +192,71 @@ const ProjectForgeModule: React.FC = () => {
         } finally {
             setIsProcessing(false);
         }
-    };
+    }, [activeFile]);
     
-    const handleNewProject = () => {
+    const handleNewProject = useCallback(() => {
         if (window.confirm("Are you sure you want to start a new project? Any unsaved changes will be lost.")) {
             setProject(defaultProject);
             setActiveFileName('index.html');
         }
-    }
+    }, []);
+
+    const handleNewFile = useCallback(() => {
+        const fileName = prompt("Enter new file name (e.g., component.js):");
+        if (!fileName || !fileName.trim()) return;
+        if (project.files.some(f => f.name === fileName)) {
+            alert("A file with that name already exists.");
+            return;
+        }
+        const newFile: ProjectFile = {
+            name: fileName,
+            language: getLanguageForFile(fileName),
+            content: ''
+        };
+        setProject(p => ({
+            ...p,
+            files: [...p.files, newFile]
+        }));
+        setActiveFileName(fileName);
+    }, [project.files]);
+
+    const handleDeleteFile = useCallback((fileNameToDelete: string) => {
+        if (!window.confirm(`Are you sure you want to delete ${fileNameToDelete}?`)) return;
+
+        let newActiveFileName = activeFileName;
+        if (activeFileName === fileNameToDelete) {
+            const currentIndex = project.files.findIndex(f => f.name === fileNameToDelete);
+            const nextFile = project.files[currentIndex + 1] || project.files[currentIndex - 1];
+            newActiveFileName = nextFile ? nextFile.name : (project.files.length > 1 ? project.files.find(f => f.name !== fileNameToDelete)!.name : '');
+        }
+        
+        setProject(p => ({ ...p, files: p.files.filter(f => f.name !== fileNameToDelete) }));
+        setActiveFileName(newActiveFileName);
+
+    }, [activeFileName, project.files]);
+
+    const handleRenameFile = useCallback((oldName: string) => {
+        const newName = prompt(`Rename ${oldName} to:`, oldName);
+        if (!newName || !newName.trim() || newName === oldName) return;
+
+        if (project.files.some(f => f.name === newName)) {
+            alert("A file with that name already exists.");
+            return;
+        }
+
+        setProject(p => ({
+            ...p,
+            files: p.files.map(file => 
+                file.name === oldName 
+                ? { ...file, name: newName, language: getLanguageForFile(newName) }
+                : file
+            )
+        }));
+
+        if (activeFileName === oldName) {
+            setActiveFileName(newName);
+        }
+    }, [project.files, activeFileName]);
 
     return (
         <div className="flex flex-col h-[85vh]">
@@ -198,20 +273,33 @@ const ProjectForgeModule: React.FC = () => {
             <div className="flex-1 flex gap-4 overflow-hidden">
                 {/* Left Panel */}
                 <div className="w-1/4 bg-gray-800 rounded-lg p-4 flex flex-col">
-                    <h2 className="text-lg font-semibold mb-2 text-white">Files</h2>
+                    <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-lg font-semibold text-white">Files</h2>
+                        <button onClick={handleNewFile} title="New File" className="p-1 text-gray-400 hover:text-white">
+                            <PlusIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                     <ul className="space-y-1 mb-4">
                         {project.files.map(file => (
-                            <li key={file.name}>
+                            <li key={file.name} className="group flex items-center justify-between rounded-md hover:bg-gray-700/50">
                                 <button
                                     onClick={() => setActiveFileName(file.name)}
-                                    className={`w-full text-left px-3 py-1.5 rounded-md text-sm ${
+                                    className={`flex-1 text-left px-3 py-1.5 rounded-md text-sm truncate ${
                                         activeFileName === file.name
                                             ? 'bg-cyan-500/20 text-cyan-300'
-                                            : 'text-gray-300 hover:bg-gray-700'
+                                            : 'text-gray-300'
                                     }`}
                                 >
                                     {file.name}
                                 </button>
+                                <div className="flex items-center pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => handleRenameFile(file.name)} title="Rename File" className="p-1 text-gray-400 hover:text-white">
+                                        <PencilIcon className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleDeleteFile(file.name)} title="Delete File" className="p-1 text-gray-400 hover:text-red-400">
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -227,13 +315,17 @@ const ProjectForgeModule: React.FC = () => {
                 {/* Code Editor */}
                 <div className="w-1/2 flex flex-col bg-gray-800 rounded-lg overflow-hidden">
                    <div className="flex-1 relative">
-                    {activeFile && (
+                    {activeFile ? (
                         <CodeEditor
                             editorRef={editorRef}
                             language={activeFile.language}
                             value={activeFile.content}
                             onChange={(value) => handleFileContentChange(value || '')}
                         />
+                    ) : (
+                         <div className="flex items-center justify-center h-full bg-gray-900 text-gray-500">
+                            <p>No file selected. Create or select a file to start editing.</p>
+                        </div>
                     )}
                    </div>
                    <div className="bg-gray-900 p-2 flex items-center justify-between">

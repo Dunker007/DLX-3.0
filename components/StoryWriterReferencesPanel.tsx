@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StoryEntry, Reference, ReferenceType } from '../types';
 
 interface StoryWriterReferencesPanelProps {
@@ -27,7 +27,7 @@ const ReferenceItem: React.FC<{ reference: Reference }> = ({ reference }) => (
     </div>
 );
 
-const StoryWriterReferencesPanel: React.FC<StoryWriterReferencesPanelProps> = ({ selectedEntry }) => {
+const StoryWriterReferencesPanel: React.FC<StoryWriterReferencesPanelProps> = memo(({ selectedEntry }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-700">
@@ -49,6 +49,6 @@ const StoryWriterReferencesPanel: React.FC<StoryWriterReferencesPanelProps> = ({
         </div>
     </div>
   );
-};
+});
 
 export default StoryWriterReferencesPanel;
