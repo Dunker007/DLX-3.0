@@ -49,65 +49,61 @@ jobs:
 
       - name: Generate Story Entry from PR Merge
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_MERGED_AT: ${{ github.event.pull_request.merged_at }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_ACTION: ${{ github.event.action }}
         run: |
-          echo "Generating Story Writer entry for PR #${{ github.event.pull_request.number }}"
+          echo "Generating Story Writer entry for PR #${PR_NUMBER}"
+          echo "PR title: ${PR_TITLE}"
+          echo "Merged at: ${PR_MERGED_AT}"
           
-          # Create a Node.js script to generate the entry
-          cat > generate-entry.mjs << 'EOF'
-          import { automationService } from './services/automationService.ts';
+          # In a production implementation, this would:
+          # 1. Create a JSON file with the event data (properly escaped)
+          # 2. Call a Node.js script that imports automationService
+          # 3. Generate and save the Story Writer entry
           
-          const event = {
-            action: '${{ github.event.action }}',
-            pull_request: {
-              number: ${{ github.event.pull_request.number }},
-              title: `${{ github.event.pull_request.title }}`,
-              html_url: '${{ github.event.pull_request.html_url }}',
-              merged_at: '${{ github.event.pull_request.merged_at }}',
-              user: {
-                login: '${{ github.event.pull_request.user.login }}'
-              },
-              base: {
-                ref: '${{ github.event.pull_request.base.ref }}'
-              },
-              head: {
-                sha: '${{ github.event.pull_request.head.sha }}'
-              },
-              body: `${{ github.event.pull_request.body }}`
-            }
-          };
-          
-          const entry = await automationService.createEntryFromPRMerge(event);
-          if (entry) {
-            console.log('Story Writer entry created:', entry.id);
-            console.log('Title:', entry.title);
-            console.log('Status:', entry.status);
-          } else {
-            console.log('No entry created (automation disabled or PR not merged)');
-          }
-          EOF
-          
-          # Note: In a real implementation, this would integrate with the Story Writer backend
-          echo "Story entry generation script created (would execute in production)"
+          echo "Story entry generation would be triggered here (not executed in CI for security)"
+          echo "Entry would be created with:"
+          echo "  - Title: Deploy • ${PR_TITLE}"
+          echo "  - References: PR#${PR_NUMBER}, commit ${PR_HEAD_SHA:0:7}"
+          echo "  - Author: mini-lux (automated)"
 
       - name: Generate Story Entry from Issue Closure
         if: github.event_name == 'issues' && github.event.action == 'closed'
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ', ') }}
         run: |
-          echo "Generating Story Writer entry for Issue #${{ github.event.issue.number }}"
-          echo "Issue title: ${{ github.event.issue.title }}"
-          echo "Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}"
+          echo "Generating Story Writer entry for Issue #${ISSUE_NUMBER}"
+          echo "Issue title: ${ISSUE_TITLE}"
+          echo "Labels: ${ISSUE_LABELS}"
 
       - name: Generate Story Entry from Release
         if: github.event_name == 'release' && github.event.action == 'published'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
         run: |
-          echo "Generating Story Writer entry for Release ${{ github.event.release.tag_name }}"
-          echo "Release name: ${{ github.event.release.name }}"
+          echo "Generating Story Writer entry for Release ${RELEASE_TAG}"
+          echo "Release name: ${RELEASE_NAME}"
 
       - name: Manual Event Processing
         if: github.event_name == 'workflow_dispatch'
+        env:
+          EVENT_TYPE: ${{ github.event.inputs.event_type }}
+          EVENT_DATA: ${{ github.event.inputs.event_data }}
         run: |
           echo "Processing manual workflow dispatch"
-          echo "Event type: ${{ github.event.inputs.event_type }}"
-          echo "Event data: ${{ github.event.inputs.event_data }}"
+          echo "Event type: ${EVENT_TYPE}"
+          echo "Event data: ${EVENT_DATA}"
 
       - name: Comment on PR (if applicable)
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
